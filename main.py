@@ -66,41 +66,48 @@ class GraphPlotter:
         self.canvas = FigureCanvasTkAgg(self.fig, master=master)
         self.canvas_widget = self.canvas.get_tk_widget()
     
-    """Plot a mathematical function.
-        Args: expression (str): Function to plot"""
-    def plot_function(self, expression: str) -> None:
+    """Plot a mathematical function with a specified domain."""
+    def plot_function_with_domain(self, expression: str, start: float= -10, end: float = 10) -> None:
         try:
+            expression = expression.replace('^', '**')
             x_sym = sp.Symbol('x')
-            
+
             safe_functions = {
                 'sin': sp.sin, 'cos': sp.cos, 'tan': sp.tan,
                 'log': sp.log, 'exp': sp.exp, 'sqrt': sp.sqrt}
-            
+
             # Parse and convert to numpy-compatible function
             expr = sp.sympify(expression, locals=safe_functions)
             f = sp.lambdify(x_sym, expr, modules='numpy')
-            
-            # Generate plot data
-            x = np.linspace(-10, 10, 400)
+
+            # Generate plot data with the specified domain
+            x = np.linspace(start, end, 400)
             y = f(x)
-            
+
+            # Filter out invalid results (infinity or NaN values)
+            valid = np.isfinite(y)
+            x, y = x[valid], y[valid]
+
             # Clear previous plot and draw new one
             self.ax.clear()
             self.ax.plot(x, y, label=f"y = {expression}")
             self.ax.axhline(0, color='black', linewidth=0.5)
             self.ax.axvline(0, color='black', linewidth=0.5)
             self.ax.grid(True, linestyle='--', alpha=0.7)
+            self.ax.set_xlim(start, end)
+            self.ax.set_ylim(start,end)
             self.ax.legend()
             self.canvas.draw()
-        
+
         except Exception as e:
             logger.error(f"Graph plotting error: {e}")
             self.ax.clear()
             self.ax.text(0.5, 0.5, f"Error: {str(e)}", 
-                         fontsize=12, color='red', 
-                         ha='center', va='center', 
-                         transform=self.ax.transAxes)
+                        fontsize=12, color='red', 
+                        ha='center', va='center', 
+                        transform=self.ax.transAxes)
             self.canvas.draw()
+
 
 class ScientificCalculatorApp:
     """Main application class for Scientific Calculator and Graph Plotter."""
@@ -299,22 +306,6 @@ class ScientificCalculatorApp:
                         tk.Button(self.frame_calculator, button_params_main, text=btn_text, 
                                   command=lambda x=btn_text: self._button_click(x)).grid(row=row_idx, column=col_idx, sticky="nsew")
 
-    def _create_graph_frame(self):
-        self.frame_graph.grid_columnconfigure(0, weight=1)
-        self.frame_graph.grid_rowconfigure(2, weight=1)
-
-        self.graph_input = tk.Entry(self.frame_graph, font=('Arial', 20))
-        self.graph_input.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
-
-        plot_button = tk.Button(self.frame_graph, text="Plot", command=self._plot_graph)
-        plot_button.grid(row=1, column=0, pady=10)
-
-        self.graph_plotter = GraphPlotter(self.frame_graph)
-        self.graph_plotter.canvas_widget.grid(row=2, column=0, sticky="nsew")
-
-    def _show_frame(self, frame):
-        frame.tkraise()
-
     '''Defining Buttons in Calculator frame.'''
     def _button_click(self, char):
         # Add a character to the current expression.
@@ -469,14 +460,65 @@ class ScientificCalculatorApp:
         except Exception as e:
             self.text_input.set("ERROR")
             logger.error(f"Factorial calculation error: {e}")
+        
+    """Create the graph plotting frame."""
+    def _create_graph_frame(self):
+        # Top input field for function
+        y_frame = tk.Frame(self.frame_graph, bg=self.config.style['bg_primary'])
+        y_frame.grid(row=0, column=0, pady=10, sticky="ew")
+        y_frame.grid_columnconfigure(1,weight=1)
+
+        # Function input field
+        tk.Label(y_frame, text="y =", bg=self.config.style['bg_primary'], fg=self.config.style['fg_primary'], 
+                 font=self.config.style['font']).grid(row=0, column=0, padx=5, sticky="w")
+        self.func_entry = tk.Entry(y_frame, font=self.config.style['font'])
+        self.func_entry.grid(row=0, column=1, padx=5, sticky="ew")
+
+        # Second row for Start, End, and Plot
+        input_frame = tk.Frame(self.frame_graph, bg=self.config.style['bg_primary'])
+        input_frame.grid(row=1, column=0, pady=10, sticky="ew")
+
+        # Domain input fields
+        tk.Label(input_frame, text="Start:", bg=self.config.style['bg_primary'], fg=self.config.style['fg_primary'], 
+                 font=self.config.style['font']).grid(row=0, column=0, padx=5, sticky="w")
+        self.domain_start = tk.Entry(input_frame, font=self.config.style['font'], width=8)
+        self.domain_start.insert(0,'-10')
+        self.domain_start.grid(row=0, column=1, padx=5)
+
+        tk.Label(input_frame, text="End:", bg=self.config.style['bg_primary'], fg=self.config.style['fg_primary'], 
+                 font=self.config.style['font']).grid(row=0, column=2, padx=5, sticky="w")
+        self.domain_end = tk.Entry(input_frame, font=self.config.style['font'], width=8)
+        self.domain_end.insert(0,'10')
+        self.domain_end.grid(row=0, column=3, padx=5)
+
+        plot_button = tk.Button(input_frame, text="Plot", font=self.config.style['font'], command=self._plot_graph)
+        plot_button.grid(row=0, column=4, padx=10)
+
+        # Add a plot canvas
+        self.graph_plotter = GraphPlotter(self.frame_graph)
+        self.graph_plotter.canvas_widget.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
+
+        # Configure frame grid weights
+        self.frame_graph.grid_columnconfigure(0, weight=1)
+        self.frame_graph.grid_rowconfigure(2, weight=1)
+
+    def _show_frame(self, frame):
+        frame.tkraise()
 
     ''' Plot button in Graph Plotter frame.'''
     def _plot_graph(self):
+        expression = self.func_entry.get().strip()
         try:
-            expression = self.graph_input.get()
-            self.graph_plotter.plot_function(expression)
-        except Exception as e:
-            messagebox.showerror("Plotting Error", str(e))
+            start = float(self.domain_start.get())
+            end = float(self.domain_end.get())
+            if start >= end:
+                raise ValueError("Domain start must be less than domain end.")
+        except ValueError as e:
+            messagebox.showerror("Input Error", f"Invalid domain: {e}")
+            return
+
+        # Use the specified domain for plotting
+        self.graph_plotter.plot_function_with_domain(expression, start, end)
     
 
 def main():
