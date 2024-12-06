@@ -1,65 +1,51 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import messagebox
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import sympy as sp
 import logging
-from typing import Dict, Any, Optional
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 class ScientificCalculatorConfig:
-    """Configuration class for calculator settings."""
-    DEFAULT_STYLE = {
-        'font': ('sans-serif', 20, 'bold'),
-        'bg_primary': '#293C4A',
-        'bg_secondary': '#3C3636',
-        'fg_primary': '#BBB',
-        'fg_secondary': '#000',
-        'highlight': '#db701f'
-    }
 
+    """Configuration class for calculator settings."""
+    DEFAULT_STYLE = {'font': ('sans-serif', 20, 'bold'), 
+                     'bg_primary': '#293C4A',
+                     'bg_secondary': '#3C3636',
+                     'fg_primary': '#BBB',
+                     'fg_secondary': '#000',
+                     'highlight': '#db701f'}
+
+    """Initialize calculator configuration.
+    Args: precision (int): Number of decimal places for calculations,
+          angle_mode (str): Angle calculation mode ('degrees' or 'radians')"""
     def __init__(self, precision: int = 8, angle_mode: str = 'degrees'):
-        """
-        Initialize calculator configuration.
-        
-        Args:
-            precision (int): Number of decimal places for calculations
-            angle_mode (str): Angle calculation mode ('degrees' or 'radians')
-        """
         self.precision = precision
         self.angle_mode = angle_mode
         self.style = self.DEFAULT_STYLE
 
 class MathExpressionEvaluator:
-    """Safe mathematical expression evaluator."""
-    
+
+    """Safely evaluate mathematical expressions.
+        Args: expression (str): Mathematical expression to evaluate
+              precision (int): Number of decimal places to round
+        Returns:str: Evaluated result"""
     @staticmethod
     def safe_evaluate(expression: str, precision: int = 8) -> str:
-        """
-        Safely evaluate mathematical expressions.
-        
-        Args:
-            expression (str): Mathematical expression to evaluate
-            precision (int): Number of decimal places to round
-        
-        Returns:
-            str: Evaluated result
-        """
         try:
             x = sp.Symbol('x')
             safe_functions = {
                 'abs': sp.Abs, 'sin': sp.sin, 'cos': sp.cos, 
                 'tan': sp.tan, 'log': sp.log, 'ln': sp.log, 
                 'exp': sp.exp, 'sqrt': sp.sqrt, 
-                'factorial': sp.factorial
-            }
+                'factorial': sp.factorial}
             
-            # Replace some common function names
+            # Replace ln to log 
             expression = expression.replace('ln(', 'log(')
             
             expr = sp.sympify(expression, locals=safe_functions)
@@ -70,35 +56,25 @@ class MathExpressionEvaluator:
             return "ERROR"
 
 class GraphPlotter:
-    """Advanced graph plotting utility."""
     
+    """Initialize graph plotter.
+        Args: master: Parent tkinter widget
+              figsize (tuple): Figure size
+              dpi (int): Dots per inch for resolution"""
     def __init__(self, master, figsize: tuple = (5, 4), dpi: int = 100):
-        """
-        Initialize graph plotter.
-        
-        Args:
-            master: Parent tkinter widget
-            figsize (tuple): Figure size
-            dpi (int): Dots per inch for resolution
-        """
         self.fig, self.ax = plt.subplots(figsize=figsize, dpi=dpi)
         self.canvas = FigureCanvasTkAgg(self.fig, master=master)
         self.canvas_widget = self.canvas.get_tk_widget()
     
+    """Plot a mathematical function.
+        Args: expression (str): Function to plot"""
     def plot_function(self, expression: str) -> None:
-        """
-        Plot a mathematical function.
-        
-        Args:
-            expression (str): Function to plot
-        """
         try:
             x_sym = sp.Symbol('x')
             
             safe_functions = {
                 'sin': sp.sin, 'cos': sp.cos, 'tan': sp.tan,
-                'log': sp.log, 'exp': sp.exp, 'sqrt': sp.sqrt
-            }
+                'log': sp.log, 'exp': sp.exp, 'sqrt': sp.sqrt}
             
             # Parse and convert to numpy-compatible function
             expr = sp.sympify(expression, locals=safe_functions)
@@ -115,7 +91,6 @@ class GraphPlotter:
             self.ax.axvline(0, color='black', linewidth=0.5)
             self.ax.grid(True, linestyle='--', alpha=0.7)
             self.ax.legend()
-            
             self.canvas.draw()
         
         except Exception as e:
@@ -129,14 +104,9 @@ class GraphPlotter:
 
 class ScientificCalculatorApp:
     """Main application class for Scientific Calculator and Graph Plotter."""
-    
+
+    # Initialize the main application. Args: root (tk.Tk): Root tkinter window 
     def __init__(self, root: tk.Tk):
-        """
-        Initialize the main application.
-        
-        Args:
-            root (tk.Tk): Root tkinter window
-        """
         self.root = root
         self.root.title("Scientific Calculator and Graph Plotter")
         self.root.geometry("600x600")
@@ -185,12 +155,9 @@ class ScientificCalculatorApp:
     
     def _create_calculator_frame(self):
         # Text display
-        text_display = tk.Entry(self.frame_calculator, 
-                                font=self.config.style['font'], 
-                                textvariable=self.text_input,
-                                bd=5, insertwidth=5, 
-                                bg='#BBB', 
-                                justify='right')
+        text_display = tk.Entry(self.frame_calculator, font=self.config.style['font'], 
+                                textvariable=self.text_input, bd=5, insertwidth=5, 
+                                bg='#BBB', justify='right')
         text_display.grid(row=0, column=0, columnspan=5, padx=10, pady=15, sticky="ew")
 
         # Button parameters
@@ -207,149 +174,132 @@ class ScientificCalculatorApp:
         for i in range(5):
             self.frame_calculator.grid_columnconfigure(i, weight=1)
 
-        # Button definitions (same as original code)
+        # Button definitions 
         self._create_calculator_buttons(button_params, button_params_main)
 
     def _create_calculator_buttons(self, button_params, button_params_main):
-        
         # Row 1
         tk.Button(self.frame_calculator, button_params, text='abs', 
-                    command=lambda: self._button_click('abs(')).grid(row=1, column=0, sticky="nsew")
+                  command=lambda: self._button_click('abs(')).grid(row=1, column=0, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='mod', 
-                    command=lambda: self._button_click('%')).grid(row=1, column=1, sticky="nsew")
+                  command=lambda: self._button_click('%')).grid(row=1, column=1, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='div', 
-                    command=lambda: self._button_click('//')).grid(row=1, column=2, sticky="nsew")
+                  command=lambda: self._button_click('//')).grid(row=1, column=2, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='x!', 
-                    command=self._fact_func).grid(row=1, column=3, sticky="nsew")
+                  command=self._fact_func).grid(row=1, column=3, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='e', 
-                    command=lambda: self._button_click(str(math.e))).grid(row=1, column=4, sticky="nsew")
-
+                  command=lambda: self._button_click(str(math.e))).grid(row=1, column=4, sticky="nsew")
         # Row 2
         tk.Button(self.frame_calculator, button_params, text='sin', 
-                    command=self._trig_sin).grid(row=2, column=0, sticky="nsew")
+                  command=self._trig_sin).grid(row=2, column=0, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='cos',
-                    command=self._trig_cos).grid(row=2, column=1, sticky="nsew")
+                  command=self._trig_cos).grid(row=2, column=1, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='tan',
-                    command=self._trig_tan).grid(row=2, column=2, sticky="nsew")
+                  command=self._trig_tan).grid(row=2, column=2, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='cot',
-                    command=self._trig_cot).grid(row=2, column=3, sticky="nsew")
+                  command=self._trig_cot).grid(row=2, column=3, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='π',
-                    command=lambda:self._button_click(str(math.pi))).grid(row=2, column=4, sticky="nsew")
-        
+                  command=lambda:self._button_click(str(math.pi))).grid(row=2, column=4, sticky="nsew")
         # Row 3
         tk.Button(self.frame_calculator, button_params, text='x\u00B2',
-                    command=lambda:self._button_click('**2')).grid(row=3, column=0, sticky="nsew")
+                  command=lambda:self._button_click('**2')).grid(row=3, column=0, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='x\u00B3',
-                    command=lambda:self._button_click('**3')).grid(row=3, column=1, sticky="nsew")
+                  command=lambda:self._button_click('**3')).grid(row=3, column=1, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='x^n',
-                    command=lambda:self._button_click('**')).grid(row=3, column=2, sticky="nsew")
+                  command=lambda:self._button_click('**')).grid(row=3, column=2, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='x\u207b\xb9',
-                    command=lambda:self._button_click('**(-1)')).grid(row=3, column=3, sticky="nsew")
+                  command=lambda:self._button_click('**(-1)')).grid(row=3, column=3, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='10^x', font=('sans-serif', 15, 'bold'),
-                    command=lambda:self._button_click('10**')).grid(row=3, column=4, sticky="nsew")     
-        
+                  command=lambda:self._button_click('10**')).grid(row=3, column=4, sticky="nsew")     
         # Row 4
         tk.Button(self.frame_calculator, button_params, text='\u00B2\u221A',
-                    command=self._square_root).grid(row=4, column=0, sticky="nsew")
+                  command=self._square_root).grid(row=4, column=0, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='\u00B3\u221A',
-                    command=self._third_root).grid(row=4, column=1, sticky="nsew")
+                  command=self._third_root).grid(row=4, column=1, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='\u221A',
-                    command=lambda:self._button_click('**(1/')).grid(row=4, column=2, sticky="nsew")
+                  command=lambda:self._button_click('**(1/')).grid(row=4, column=2, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='log\u2081\u2080', font=('sans-serif', 16, 'bold'),
-                    command=self._log_base_10).grid(row=4, column=3, sticky="nsew")
+                  command=self._log_base_10).grid(row=4, column=3, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='ln',
-                    command=self._ln).grid(row=4, column=4, sticky="nsew")
-
+                  command=self._ln).grid(row=4, column=4, sticky="nsew")
         # Row 5
         tk.Button(self.frame_calculator, button_params, text='(',
-                    command=lambda:self._button_click('(')).grid(row=5, column=0, sticky="nsew")
+                  command=lambda:self._button_click('(')).grid(row=5, column=0, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text=')',
-                    command=lambda:self._button_click(')')).grid(row=5, column=1, sticky="nsew")  
+                  command=lambda:self._button_click(')')).grid(row=5, column=1, sticky="nsew")  
         tk.Button(self.frame_calculator, button_params, text='\u00B1',
-                    command=self._sign_change).grid(row=5, column=2, sticky="nsew")
+                  command=self._sign_change).grid(row=5, column=2, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='%',
-                    command=self._percent).grid(row=5, column=3, sticky="nsew")
+                  command=self._percent).grid(row=5, column=3, sticky="nsew")
         tk.Button(self.frame_calculator, button_params, text='e^x',
-                    command=self._exp_func).grid(row=5, column=4, sticky="nsew")
-
+                  command=self._exp_func).grid(row=5, column=4, sticky="nsew")
         # Row 6
         tk.Button(self.frame_calculator, button_params_main, text='7',
-                    command=lambda:self._button_click('7')).grid(row=6, column=0, sticky="nsew")
+                  command=lambda:self._button_click('7')).grid(row=6, column=0, sticky="nsew")
         tk.Button(self.frame_calculator, button_params_main, text='8',
-                    command=lambda:self._button_click('8')).grid(row=6, column=1, sticky="nsew")
+                  command=lambda:self._button_click('8')).grid(row=6, column=1, sticky="nsew")
         tk.Button(self.frame_calculator, button_params_main, text='9',
-                    command=lambda:self._button_click('9')).grid(row=6, column=2, sticky="nsew")
+                  command=lambda:self._button_click('9')).grid(row=6, column=2, sticky="nsew")
         tk.Button(self.frame_calculator, bd=5, fg='#000', font=('sans-serif', 20, 'bold'), text='DEL', 
-                    command=self._button_delete, bg='#db701f').grid(row=6, column=3, sticky="nsew")
+                  command=self._button_delete, bg='#db701f').grid(row=6, column=3, sticky="nsew")
         tk.Button(self.frame_calculator, bd=5, fg='#000', font=('sans-serif', 20, 'bold'), text='AC', 
-                    command=self._button_clear_all, bg='#db701f').grid(row=6, column=4, sticky="nsew")
-
+                  command=self._button_clear_all, bg='#db701f').grid(row=6, column=4, sticky="nsew")
         # Row 7
         tk.Button(self.frame_calculator, button_params_main, text='4',
-                    command=lambda:self._button_click('4')).grid(row=7, column=0, sticky="nsew")
+                  command=lambda:self._button_click('4')).grid(row=7, column=0, sticky="nsew")
         tk.Button(self.frame_calculator, button_params_main, text='5',
-                    command=lambda:self._button_click('5')).grid(row=7, column=1, sticky="nsew")
+                  command=lambda:self._button_click('5')).grid(row=7, column=1, sticky="nsew")
         tk.Button(self.frame_calculator, button_params_main, text='6',
-                    command=lambda:self._button_click('6')).grid(row=7, column=2, sticky="nsew")
+                  command=lambda:self._button_click('6')).grid(row=7, column=2, sticky="nsew")
         tk.Button(self.frame_calculator, button_params_main, text='*',
-                    command=lambda:self._button_click('*')).grid(row=7, column=3, sticky="nsew")
+                  command=lambda:self._button_click('*')).grid(row=7, column=3, sticky="nsew")
         tk.Button(self.frame_calculator, button_params_main, text='/',
-                    command=lambda:self._button_click('/')).grid(row=7, column=4, sticky="nsew")
-
+                  command=lambda:self._button_click('/')).grid(row=7, column=4, sticky="nsew")
         # Row 8
         tk.Button(self.frame_calculator, button_params_main, text='1',
-                    command=lambda:self._button_click('1')).grid(row=8, column=0, sticky="nsew")
+                  command=lambda:self._button_click('1')).grid(row=8, column=0, sticky="nsew")
         tk.Button(self.frame_calculator, button_params_main, text='2',
-                    command=lambda:self._button_click('2')).grid(row=8, column=1, sticky="nsew")
+                  command=lambda:self._button_click('2')).grid(row=8, column=1, sticky="nsew")
         tk.Button(self.frame_calculator, button_params_main, text='3',
-                    command=lambda:self._button_click('3')).grid(row=8, column=2, sticky="nsew")
+                  command=lambda:self._button_click('3')).grid(row=8, column=2, sticky="nsew")
         tk.Button(self.frame_calculator, button_params_main, text='+',
-                    command=lambda:self._button_click('+')).grid(row=8, column=3, sticky="nsew")
+                  command=lambda:self._button_click('+')).grid(row=8, column=3, sticky="nsew")
         tk.Button(self.frame_calculator, button_params_main, text='-',
-                    command=lambda:self._button_click('-')).grid(row=8, column=4, sticky="nsew")
-
-
+                  command=lambda:self._button_click('-')).grid(row=8, column=4, sticky="nsew")
         # Row 9 - special handling for equal button
         tk.Button(self.frame_calculator, button_params_main, text='0', 
-                    command=lambda:self._button_click('0')).grid(row=9, column=0, sticky="nsew")
+                  command=lambda:self._button_click('0')).grid(row=9, column=0, sticky="nsew")
         tk.Button(self.frame_calculator, button_params_main, text='.', 
-                    command=lambda:self._button_click('.')).grid(row=9, column=1, sticky="nsew")
+                  command=lambda:self._button_click('.')).grid(row=9, column=1, sticky="nsew")
         tk.Button(self.frame_calculator, button_params_main, text='EXP', font=('sans-serif', 16, 'bold'), 
-                    command=lambda:self._button_click('*10**')).grid(row=9, column=2, sticky="nsew")
+                  command=lambda:self._button_click('*10**')).grid(row=9, column=2, sticky="nsew")
         tk.Button(self.frame_calculator, button_params_main, text='=', 
-                    command=self._button_equal).grid(row=9, columnspan=2, column=3, sticky="nsew")
+                  command=self._button_equal).grid(row=9, columnspan=2, column=3, sticky="nsew")
 
         # Number and operation buttons
-        numbers_operators = [
-            ('7', '8', '9', 'DEL', 'AC'),
-            ('4', '5', '6', '*', '/'),
-            ('1', '2', '3', '+', '-'),
-            ('0', '.', 'EXP', '=', None)
-        ]
+        numbers_operators = [('7', '8', '9', 'DEL', 'AC'),
+                             ('4', '5', '6', '*', '/'),
+                             ('1', '2', '3', '+', '-'),
+                             ('0', '.', 'EXP', '=', None)]
         
         for row_idx, row in enumerate(numbers_operators, start=6):
             for col_idx, btn_text in enumerate(row):
                 if btn_text:
                     if btn_text in ('DEL', 'AC'):
                         btn_cmd = self._button_delete if btn_text == 'DEL' else self._button_clear_all
-                        tk.Button(self.frame_calculator, button_params_main, text=btn_text, 
-                                  command=btn_cmd, bg=self.config.style['highlight']).grid(
-                                      row=row_idx, column=col_idx, sticky="nsew")
+                        tk.Button(self.frame_calculator, button_params_main, text=btn_text, command=btn_cmd, 
+                                  bg=self.config.style['highlight']).grid(row=row_idx, column=col_idx, sticky="nsew")
                     elif btn_text == '=':
                         tk.Button(self.frame_calculator, button_params_main, text='=', 
-                                  command=self._button_equal).grid(
-                                      row=row_idx, column=col_idx, columnspan=2, sticky="nsew")
+                                  command=self._button_equal).grid(row=row_idx, column=col_idx, columnspan=2, sticky="nsew")
                     elif btn_text == 'EXP':
                         tk.Button(self.frame_calculator, button_params_main, text='EXP', 
-                                  command=lambda: self._button_click('*10**')).grid(
-                                      row=row_idx, column=col_idx, sticky="nsew")
+                                  command=lambda: self._button_click('*10**')).grid(row=row_idx, column=col_idx, sticky="nsew")
                     else:
                         tk.Button(self.frame_calculator, button_params_main, text=btn_text, 
-                                  command=lambda x=btn_text: self._button_click(x)).grid(
-                                      row=row_idx, column=col_idx, sticky="nsew")
+                                  command=lambda x=btn_text: self._button_click(x)).grid(row=row_idx, column=col_idx, sticky="nsew")
 
     def _create_graph_frame(self):
-        # Similar to original graph frame, use GraphPlotter
         self.frame_graph.grid_columnconfigure(0, weight=1)
         self.frame_graph.grid_rowconfigure(2, weight=1)
 
@@ -365,34 +315,29 @@ class ScientificCalculatorApp:
     def _show_frame(self, frame):
         frame.tkraise()
 
+    '''Defining Buttons in Calculator frame.'''
     def _button_click(self, char):
-        """Add a character to the current expression."""
+        # Add a character to the current expression.
         self.calc_operator += str(char)
         self.text_input.set(self.calc_operator)
 
     def _button_clear_all(self):
-        """Clear the entire expression."""
+        # Clear the entire expression.
         self.calc_operator = ""
         self.text_input.set("")
 
     def _button_delete(self):
-        """Delete the last character."""
+        # Delete the last character.
         self.calc_operator = self.calc_operator[:-1]
         self.text_input.set(self.calc_operator)
 
     def _button_equal(self):
-        """Calculate the result of the expression."""
-        result = MathExpressionEvaluator.safe_evaluate(
-            self.calc_operator, 
-            precision=self.config.precision
-        )
+        result = MathExpressionEvaluator.safe_evaluate(self.calc_operator, precision=self.config.precision)
         self.text_input.set(result)
         self.calc_operator = result
 
     def _trig_sin(self):
-        """Calculate sine of the current expression."""
         try:
-            # Convert input to float first
             angle = float(self.calc_operator)
             result = str(round(math.sin(math.radians(angle)), 8))
             self.calc_operator = result
@@ -402,9 +347,7 @@ class ScientificCalculatorApp:
             logger.error(f"Sine calculation error: {e}")
 
     def _trig_cos(self):
-        """Calculate cosine of the current expression."""
         try:
-            # Convert input to float first
             angle = float(self.calc_operator)
             result = str(round(math.cos(math.radians(angle)), 8))
             self.calc_operator = result
@@ -414,17 +357,13 @@ class ScientificCalculatorApp:
             logger.error(f"Cosine calculation error: {e}")
 
     def _trig_tan(self):
-        """Calculate tangent of the current expression."""
         try:
-            # Convert input to float first
             angle = float(self.calc_operator)
-            
             # Check for special cases that cause tangent to be undefined
             if abs(angle % 180 - 90) < 1e-10:  # Handling angles close to 90, 270, etc.
                 self.text_input.set("UNDEFINED")
                 self.calc_operator = ""
                 return
-            
             result = str(round(math.tan(math.radians(angle)), 8))
             self.calc_operator = result
             self.text_input.set(result)
@@ -433,17 +372,13 @@ class ScientificCalculatorApp:
             logger.error(f"Tangent calculation error: {e}")
 
     def _trig_cot(self):
-        """Calculate cotangent of the current expression."""
         try:
-            # Convert input to float first
             angle = float(self.calc_operator)
-            
             # Check for special cases that cause cotangent to be undefined
             if abs(angle % 180) < 1e-10:  # Handling angles close to 0, 180, 360, etc.
                 self.text_input.set("UNDEFINED")
                 self.calc_operator = ""
                 return
-            
             result = str(round(1/math.tan(math.radians(angle)), 8))
             self.calc_operator = result
             self.text_input.set(result)
@@ -452,7 +387,6 @@ class ScientificCalculatorApp:
             logger.error(f"Cotangent calculation error: {e}")
 
     def _square_root(self):
-        """Calculate square root of the current expression."""
         try:
             # Check if the number is non-negative
             if float(self.calc_operator) >= 0:
@@ -466,7 +400,6 @@ class ScientificCalculatorApp:
             logger.error(f"Square root calculation error: {e}")
 
     def _log_base_10(self):
-        """Calculate log base 10 of the current expression."""
         try:
             value = float(self.calc_operator)
             result = str(round(math.log10(value), 8))
@@ -477,7 +410,6 @@ class ScientificCalculatorApp:
             logger.error(f"Log10 calculation error: {e}")
 
     def _ln(self):
-        """Calculate log base e of the current expression."""
         try:
             value = float(self.calc_operator)
             result = str(round(math.log(value), 8))
@@ -488,9 +420,7 @@ class ScientificCalculatorApp:
             logger.error(f"ln calculation error: {e}")
 
     def _exp_func(self):
-        """Calculate exponential function e^x."""
         try:
-            # Convert input to float first
             value = float(self.calc_operator)
             result = str(round(math.exp(value), 8))
             self.calc_operator = result
@@ -500,9 +430,7 @@ class ScientificCalculatorApp:
             logger.error(f"Exponential calculation error: {e}")
 
     def _third_root(self):
-        """Calculate cube root of the current expression."""
         try:
-            # Allow both positive and negative numbers for cube root
             result = MathExpressionEvaluator.safe_evaluate(f"({self.calc_operator})**(1/3)")
             self.calc_operator = result
             self.text_input.set(result)
@@ -511,7 +439,6 @@ class ScientificCalculatorApp:
             logger.error(f"Cube root calculation error: {e}")
 
     def _sign_change(self):
-        """Change the sign of the current expression."""
         try:
             # If the expression starts with a minus, remove it
             if self.calc_operator and self.calc_operator[0] == '-':
@@ -519,7 +446,6 @@ class ScientificCalculatorApp:
             else:
                 # Otherwise, add a minus sign
                 result = '-' + self.calc_operator
-            
             self.calc_operator = result
             self.text_input.set(result)
         except Exception as e:
@@ -527,7 +453,6 @@ class ScientificCalculatorApp:
             logger.error(f"Sign change error: {e}")
 
     def _percent(self):
-        """Convert the current expression to a percentage."""
         try:
             result = MathExpressionEvaluator.safe_evaluate(f"{self.calc_operator}/100")
             self.calc_operator = result
@@ -536,17 +461,7 @@ class ScientificCalculatorApp:
             self.text_input.set("ERROR")
             logger.error(f"Percentage calculation error: {e}")
     
-
-    def _plot_graph(self):
-        """Plot the graph for the input expression."""
-        try:
-            expression = self.graph_input.get()
-            self.graph_plotter.plot_function(expression)
-        except Exception as e:
-            messagebox.showerror("Plotting Error", str(e))
-    
     def _fact_func(self):
-        """Calculate factorial of the current expression."""
         try:
             result = MathExpressionEvaluator.safe_evaluate(f"factorial({self.calc_operator})")
             self.calc_operator = result
@@ -555,9 +470,18 @@ class ScientificCalculatorApp:
             self.text_input.set("ERROR")
             logger.error(f"Factorial calculation error: {e}")
 
+    ''' Plot button in Graph Plotter frame.'''
+    def _plot_graph(self):
+        try:
+            expression = self.graph_input.get()
+            self.graph_plotter.plot_function(expression)
+        except Exception as e:
+            messagebox.showerror("Plotting Error", str(e))
+    
+
 def main():
     root = tk.Tk()
-    app = ScientificCalculatorApp(root)
+    ScientificCalculatorApp(root)
     root.mainloop()
 
 if __name__ == "__main__":
